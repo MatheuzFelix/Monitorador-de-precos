@@ -4,7 +4,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from tkinter import messagebox
 from selenium import webdriver
-
 import time
 
 
@@ -26,6 +25,7 @@ class Consulta:
         self.VlrdoProduto = By.XPATH, "*//div[@class='sc-hKwDye hBjQcp sc-JEhMO epMUid']" # Xpath criado com a biblioteca scrapy para ter acesso a todos os produtos do site
 
     def magazineLuiza (self):
+        #acessando site da magazine e fazendo a pesquisa do produto
         driver.get('https://www.magazineluiza.com.br')
         while True:
             try:
@@ -34,6 +34,7 @@ class Consulta:
                 break
             except: time.sleep(1)
         time.sleep(10)
+        #Lendo os produtos encontrados e escolhendo o melhor
         QuantProdutos = len(driver.find_elements(*self.VlrdoProduto))
         listaValores = {
         }
@@ -49,6 +50,7 @@ class Consulta:
             listaValores.update(dicionary)
         minimo = min(listaValores, key= listaValores.get)
 
+        #Mensagem exibindo o melhor produto do site
         barato = driver.find_elements(*self.produtos)[minimo].text
         messagebox.showinfo('Produto mais barato encontrado',\
             barato)
