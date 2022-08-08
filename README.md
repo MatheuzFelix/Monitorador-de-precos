@@ -3,6 +3,7 @@
 <p align="center">Esse projeto... 🤖</p>
 
 
+
 # 📜 Sobre
 <p>Automação de consulta em alguns sites de compras, pesquisar o produto desejado e comparar o melhor entre eles, apos a consulta enviaremos um enviado um email informando sobre os produtos dos sites<p>
 
