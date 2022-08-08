@@ -17,9 +17,9 @@
 
 # 🎯 Metas
 - [x] webscraping com selenium
-- [] Webscraping com Beautifulsoup
-- [] Interface grafica com o pysimplegui
-- [] Envio de email com python
+- [ ] Webscraping com Beautifulsoup
+- [ ] Interface grafica com o pysimplegui
+- [ ] Envio de email com python
 
 # 
 <p align="center">⚠️ Projeto ainda em desenvovimento... ⚠️</p>
