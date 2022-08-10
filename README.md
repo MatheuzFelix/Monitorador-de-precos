@@ -5,7 +5,7 @@
 
 
 # 📜 Sobre
-<p>Automação de consulta em alguns sites de compras, pesquisar o produto desejado e comparar o melhor entre eles, apos a consulta enviaremos um enviado um email informando sobre os produtos dos sites<p>
+<p>Automação de consulta em alguns sites de compras, pesquisando o produto desejado e comparando os produtos para encontrar o mais barato, apos a consulta enviaremos um enviado um email informando sobre os produtos dos sites<p>
 
 # ⚔️ Ferramenta
 <p>Python<p>
