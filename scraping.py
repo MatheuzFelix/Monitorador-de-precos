@@ -22,7 +22,7 @@ class Consulta:
         # elementos do site da Magazine
         self.inputBusca = By.ID, 'input-search'
         self.produtos = By.XPATH, "*//div[@class='sc-iyyVIK gdPMEf']" # Xpath criado com a biblioteca scrapy para acessa todos os preços encontrados na pesquisa 
-        self.VlrdoProduto = By.XPATH, "*//div[@class='sc-hKwDye hBjQcp sc-JEhMO epMUid']" # Xpath criado com a biblioteca scrapy para ter acesso a todos os produtos do site
+        self.VlrdoProduto = By.XPATH, "*//p[@class='sc-kDTinF zuoFI sc-dcgwPl bvdLco']" # Xpath criado com a biblioteca scrapy para ter acesso a todos os produtos do site
         
     def magazineLuiza(self):
         #definindo algumas variaveis
@@ -40,14 +40,22 @@ class Consulta:
                 driver.find_element(*self.inputBusca).send_keys(Keys.ENTER)
                 break
             except: time.sleep(1)
-        time.sleep(10)
-        self.url = driver.current_url
+
+        while True:
+            try:
+                if 'Resultados para' in driver.page_source:
+                    print('pagina carregada')
+                    break
+            except: 
+                time.sleep(1)
 
         if self.scraping_bs4():
-            print ('erro ao se conectar com o site.')
+            print ('erro ao se conectar com o site')
+            self.scraping_selenium()
 
     def scraping_bs4(self):
         #encontrando o produto mais baroto encontrado no site com o webscraping do BeautifulSoup
+        self.url = driver.current_url
         print(self.url)
         dicionary = {}
         headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \ (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"}
@@ -71,6 +79,24 @@ class Consulta:
         Valor = soup.find_all(self.precoTag, class_=self.precoClasse)[minimo].get_text()
         melhorProduto = soup.find_all(self.produtoTag, class_=self.produtoClasse)[minimo].get_text()
         print(f'o produto mais barato encontrado no site foi: {melhorProduto} esta na promoção por {Valor}')
+
+    def scraping_selenium(self):
+        #encontrando o produto mais baroto encontrado no site com o webscraping do Selenium
+        quant_produtos = len(driver.find_elements(*self.produtos))
+        dicionary = {}
+        for i in range(quant_produtos):
+            valores = driver.find_elements(*self.VlrdoProduto)[i].text
+            valores = valores.replace('R$','')
+            index = valores.find(',')
+            preco = valores[:index]
+            preco = preco.replace('.','')
+            listaPrecos = {i:int(preco),}
+            dicionary.update(listaPrecos)
+        menor = min(dicionary, key=dicionary.get)
+        menorProduto = driver.find_elements(*self.produtos)[menor].text
+        menorVlr = driver.find_elements(*self.VlrdoProduto)[menor].text
+        print(f'o produto mais barato encontrado no site foi: {menorProduto} esta na promoção por {menorVlr}')
+        
 executar = Consulta(driver)
 
 executar.magazineLuiza()
