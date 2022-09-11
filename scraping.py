@@ -15,89 +15,53 @@ options_chrome.add_argument('--start-maximized')
 options_chrome.add_argument('--log-level=3')
 driver = webdriver.Chrome(service=chrome, options=options_chrome)
 
-class Consulta:
+class Scraping:
     def __init__(self,driver):
         driver = driver
 
-        # elementos do site da Magazine
-        self.inputBusca = By.ID, 'input-search'
-        self.produtos = By.XPATH, "*//div[@class='sc-iyyVIK gdPMEf']" # Xpath criado com a biblioteca scrapy para acessa todos os preços encontrados na pesquisa 
-        self.VlrdoProduto = By.XPATH, "*//p[@class='sc-kDTinF zuoFI sc-dcgwPl bvdLco']" # Xpath criado com a biblioteca scrapy para ter acesso a todos os produtos do site
-        
-    def magazineLuiza(self):
-        #definindo algumas variaveis
-        self.url = driver.current_url
-        self.precoTag = 'p'
-        self.precoClasse = "sc-kDTinF zuoFI sc-dcgwPl bvdLco"
-        self.produtoTag ='div'
-        self.produtoClasse ='sc-iyyVIK gdPMEf'
+        #Pagina de pesquisa
+        self.searche = By.NAME, 'conteudo'
+        self.btnSearche = By.XPATH, '//*[@id="rsyswpsdk"]/div/header/div[1]/div[1]/div/div[1]/form/button'
 
-        #acessando site da magazine e fazendo a pesquisa do produto
-        driver.get('https://www.magazineluiza.com.br')
+        #Raspagem de dados
+        self.produto = By.XPATH, "*//div[@class='product-info__Container-sc-1or28up-0 cdKgxb']//h3"
+        self.preco = By.XPATH, "*//div[@class='price-info__Wrapper-sc-1xm1xzb-0 clqFWq inStockCard__PriceInfoUI-sc-1ngt5zo-2 QfpEc']//span[@class='src__Text-sc-154pg0p-0 price__PromotionalPrice-sc-h6xgft-1 ctBJlj price-info__ListPriceWithMargin-sc-1xm1xzb-2 liXDNM']"
+        self.btnprox = By.XPATH, '//*[@id="rsyswpsdk"]/div/main/div/div[3]/div[3]/div/ul/li[10]/button'
+
+
+    def start(self):
+        self.search_page()
+
+    def search_page(self):
+        last_Page = 'disabled=""'
+        driver.get('https://www.americanas.com.br')
+
+        driver.find_element(*self.searche).send_keys('samsung monitor 21 polegadas')
+        driver.find_element(*self.btnSearche).click()
+
+        time.sleep(10)
+        self.getting_information()
         while True:
             try:
-                driver.find_element(*self.inputBusca).send_keys('computador')
-                driver.find_element(*self.inputBusca).send_keys(Keys.ENTER)
-                break
-            except: time.sleep(1)
-
-        while True:
-            try:
-                if 'Resultados para' in driver.page_source:
-                    print('pagina carregada')
+                if last_Page in driver.find_element(By.XPATH, '//*[@id="rsyswpsdk"]/div/main/div/div[3]/div[3]/div/ul/li[10]').get_attribute('innerHTML'):
+                    print('last page')
                     break
-            except: 
+                else:
+                    driver.find_element(*self.btnprox).click()
+                    self.getting_information()
+            except:
                 time.sleep(1)
+    
+    def getting_information(self):
+        quant = len(driver.find_elements(*self.produto))
+        for i in range(quant): 
+            produto = driver.find_elements(*self.produto)[i].text
+            vlr = driver.find_elements(*self.preco)[i].text
 
-        if self.scraping_bs4():
-            print ('erro ao se conectar com o site')
-            self.scraping_selenium()
-
-    def scraping_bs4(self):
-        #encontrando o produto mais baroto encontrado no site com o webscraping do BeautifulSoup
-        self.url = driver.current_url
-        print(self.url)
-        dicionary = {}
-        headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \ (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"}
-        site = requests.get(self.url, headers=headers)
-        if 'validate' in site.url:
-            return True
-        soup= BeautifulSoup(site.content, 'html.parser')
-        quant_produtos = len(soup.find_all(self.precoTag, class_=self.precoClasse))
-        print(f'foram encontrados {quant_produtos} produtos')
-        for i in range(quant_produtos):
-            Valor = soup.find_all(self.precoTag, class_=self.precoClasse)[i].get_text()
-            Valor = Valor.replace('R$','')
-            index = Valor.find(',')
-            preco = Valor[:index]
-            preco = preco.replace('.','')
-            listaPrecos = {
-                i:int(preco),
-            }
-            dicionary.update(listaPrecos)
-        minimo = min(dicionary, key=dicionary.get)
-        Valor = soup.find_all(self.precoTag, class_=self.precoClasse)[minimo].get_text()
-        melhorProduto = soup.find_all(self.produtoTag, class_=self.produtoClasse)[minimo].get_text()
-        print(f'o produto mais barato encontrado no site foi: {melhorProduto} esta na promoção por {Valor}')
-
-    def scraping_selenium(self):
-        #encontrando o produto mais baroto encontrado no site com o webscraping do Selenium
-        quant_produtos = len(driver.find_elements(*self.produtos))
-        dicionary = {}
-        for i in range(quant_produtos):
-            valores = driver.find_elements(*self.VlrdoProduto)[i].text
-            valores = valores.replace('R$','')
-            index = valores.find(',')
-            preco = valores[:index]
-            preco = preco.replace('.','')
-            listaPrecos = {i:int(preco),}
-            dicionary.update(listaPrecos)
-        menor = min(dicionary, key=dicionary.get)
-        menorProduto = driver.find_elements(*self.produtos)[menor].text
-        menorVlr = driver.find_elements(*self.VlrdoProduto)[menor].text
-        print(f'o produto mais barato encontrado no site foi: {menorProduto} esta na promoção por {menorVlr}')
+            print(produto)
+            print(vlr)
         
-executar = Consulta(driver)
 
-executar.magazineLuiza()
+executar = Scraping(driver)
 
+executar.start()
