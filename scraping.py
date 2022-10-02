@@ -1,9 +1,16 @@
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+from email.mime.multipart import MIMEMultipart
 from selenium.webdriver.common.by import By
-import openpyxl
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from selenium import webdriver
+from email import encoders
+import openpyxl
+import smtplib
 import time
+import json
+
 
 #Configurando e Atualizando o webdriver
 chrome = service=ChromeService(ChromeDriverManager().install())
@@ -20,10 +27,10 @@ class Scraping:
         #Pagina de pesquisa
         self.searche = By.NAME, 'conteudo'
         self.btnSearche = By.XPATH, '//*[@id="rsyswpsdk"]/div/header/div[1]/div[1]/div/div[1]/form/button'
-
+        
         #Raspagem de dados
         self.produto = By.XPATH, "*//div[@class='product-info__Container-sc-1or28up-0 cdKgxb']//h3"
-        self.preco = By.XPATH, "*//div[@class='price-info__Wrapper-sc-1xm1xzb-0 clqFWq inStockCard__PriceInfoUI-sc-1ngt5zo-2 QfpEc']//span[@class='src__Text-sc-154pg0p-0 price__PromotionalPrice-sc-h6xgft-1 ctBJlj price-info__ListPriceWithMargin-sc-1xm1xzb-2 liXDNM']"
+        self.preco = By.XPATH, "*//span[@class='src__Text-sc-154pg0p-0 price__PromotionalPrice-sc-h6xgft-1 ctBJlj price-info__ListPriceWithMargin-sc-1xm1xzb-2 liXDNM']"
         self.btnprox = By.XPATH, '//*[@id="rsyswpsdk"]/div/main/div/div[3]/div[3]/div/ul/li[10]/button'
 
         #Listas das informações
@@ -33,6 +40,7 @@ class Scraping:
     def start(self):
         self.search_page()
         self.creat_worksheet()
+        self.send_email()
 
     def search_page(self):
         last_Page = 'disabled=""'
@@ -80,10 +88,41 @@ class Scraping:
 
         wb.save('planilha_de_preços.xlsx')
 
+        self.file = 'planilha_de_preços.xlsx'
+
         print(f'\u001b[32m{"Planilha criada com sucesso"}\u001b[0m')
 
     def send_email(self):
-        print('aqui enviaremos o email')
+
+        with open('server.json', 'r') as f:
+            server = json.load(f)
+        login = server['login']
+        password = server['password']
+
+        server = smtplib.SMTP(server['host'], server['port'])
+        server.ehlo()
+        server.starttls()
+        server.login(login, password)
+
+        email_msg = MIMEMultipart()
+        email_msg['From'] = login
+        email_msg['To'] = login
+        email_msg['Subject'] = 'Planilha de preços'
+
+        email_msg.attach(MIMEText('Olá. <br> Segue anexo arquivo <b>.xlsx</b> com os nomes e preços correspondentes \
+            a pesquisa do site: https://www.americanas.com.br', 'html'))
+
+        attachment = open(self.file, 'rb')
+        att = MIMEBase('application', 'octect-stream')
+        att.set_payload(attachment.read())
+        encoders.encode_base64(att)
+
+        att.add_header('Content-Disposition', f'attachment; filename={self.file}')
+        attachment.close()
+        email_msg.attach(att)
+        server.sendmail(email_msg['From'], email_msg['To'], email_msg.as_string())
+        server.quit()
+        print('\nEmail successfully sent.')
 
 
 executar = Scraping(driver)
