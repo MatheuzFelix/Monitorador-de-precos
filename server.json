@@ -1,6 +1,6 @@
 {
     "host":"smtp.gmail.com",
     "port":"587",
-    "login":"matheuzfelixamorim@gmail.com",
-    "password":"rhersqgzhnrgbatf"
+    "login":"",
+    "password":""
 }
